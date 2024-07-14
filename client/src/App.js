@@ -34,5 +34,6 @@ function App() {
     </div>
   );
 }
+console.log('React app is rendering!');
 
 export default App;
