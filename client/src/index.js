@@ -1,6 +1,5 @@
 import React from "react";
-import { createRoot } from "react-dom/client"; // Import from react-dom/client
-//import "./index.css";
+import ReactDOM from "react-dom/client"; // Updated import
 import App from "./App";
 import { authSlice } from "./state";
 import { configureStore } from "@reduxjs/toolkit";
@@ -9,9 +8,12 @@ import { persistStore, persistReducer, FLUSH, REHYDRATE, PAUSE, PERSIST, PURGE, 
 import storage from "redux-persist/lib/storage";
 import { PersistGate } from "redux-persist/integration/react";
 
+// Configuration for Redux Persist
 const persistConfig = { key: "root", storage, version: 1 };
 const authReducer = authSlice.reducer;
 const persistedReducer = persistReducer(persistConfig, authReducer);
+
+// Configure the Redux store
 const store = configureStore({
   reducer: persistedReducer,
   middleware: (getDefaultMiddleware) =>
@@ -21,9 +23,12 @@ const store = configureStore({
       },
     }),
 });
+
+// Create a persistor object
 const persistor = persistStore(store);
 
-const root = createRoot(document.getElementById("root"));
+// Render the application
+const root = ReactDOM.createRoot(document.getElementById("root")); // Updated method
 root.render(
   <React.StrictMode>
     <Provider store={store}>

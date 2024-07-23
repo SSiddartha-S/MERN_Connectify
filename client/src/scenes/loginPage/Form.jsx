@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState } from "react"; // Import useState hook from React
 import {
   Box,
   Button,
@@ -6,16 +6,17 @@ import {
   Typography,
   useMediaQuery,
   useTheme,
-} from "@mui/material";
-import EditOutlinedIcon from "@mui/icons-material/EditOutlined";
-import { Formik } from "formik";
-import * as yup from "yup";
-import { useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
-import { setLogin } from "../../state";
-import Dropzone from "react-dropzone";
-import FlexBetween from "../../components/FlexBetween";
+} from "@mui/material"; // Import MUI components and hooks
+import EditOutlinedIcon from "@mui/icons-material/EditOutlined"; // Import MUI icon
+import { Formik } from "formik"; // Import Formik for form handling
+import * as yup from "yup"; // Import Yup for form validation
+import { useNavigate } from "react-router-dom"; // Import hook for navigation
+import { useDispatch } from "react-redux"; // Import hook for dispatching actions
+import { setLogin } from "../../state"; // Import action from Redux state
+import Dropzone from "react-dropzone"; // Import Dropzone for file uploads
+import FlexBetween from "../../components/FlexBetween"; // Import custom component
 
+// Validation schema for registration form using Yup
 const registerSchema = yup.object().shape({
   firstName: yup.string().required("required"),
   lastName: yup.string().required("required"),
@@ -26,11 +27,13 @@ const registerSchema = yup.object().shape({
   picture: yup.mixed().required("required"),
 });
 
+// Validation schema for login form using Yup
 const loginSchema = yup.object().shape({
   email: yup.string().email("invalid email").required("required"),
   password: yup.string().required("required"),
 });
 
+// Initial values for registration form
 const initialValuesRegister = {
   firstName: "",
   lastName: "",
@@ -41,77 +44,81 @@ const initialValuesRegister = {
   picture: null,
 };
 
+// Initial values for login form
 const initialValuesLogin = {
   email: "",
   password: "",
 };
 
 const Form = () => {
-  const [pageType, setPageType] = useState("login");
-  const [errorMessage, setErrorMessage] = useState("");
-  const { palette } = useTheme();
-  const dispatch = useDispatch();
-  const navigate = useNavigate();
-  const isNonMobile = useMediaQuery("(min-width:600px)");
-  const isLogin = pageType === "login";
-  const isRegister = pageType === "register";
+  const [pageType, setPageType] = useState("login"); // State to toggle between login and register
+  const [errorMessage, setErrorMessage] = useState(""); // State to manage error messages
+  const { palette } = useTheme(); // Access theme colors
+  const dispatch = useDispatch(); // Dispatch action to Redux store
+  const navigate = useNavigate(); // Navigation hook for routing
+  const isNonMobile = useMediaQuery("(min-width:600px)"); // Media query to check if screen width is >= 600px
+  const isLogin = pageType === "login"; // Check if current page type is login
+  const isRegister = pageType === "register"; // Check if current page type is register
 
+  // Handle user registration
   const register = async (values, onSubmitProps) => {
     try {
-      const formData = new FormData();
+      const formData = new FormData(); // Create a FormData object to handle file upload
       for (let value in values) {
-        formData.append(value, values[value]);
+        formData.append(value, values[value]); // Append form values to formData
       }
-      formData.append("picturePath", values.picture.name);
+      formData.append("picturePath", values.picture.name); // Append picture name
 
       const savedUserResponse = await fetch(
         "http://localhost:3001/auth/register",
         {
           method: "POST",
-          body: formData,
+          body: formData, // Send formData as request body
         }
       );
 
-      const savedUser = await savedUserResponse.json();
+      const savedUser = await savedUserResponse.json(); // Parse JSON response
       if (savedUser.error) {
-        setErrorMessage(savedUser.error);
+        setErrorMessage(savedUser.error); // Set error message if there's an error
       } else {
-        onSubmitProps.resetForm();
-        setPageType("login");
+        onSubmitProps.resetForm(); // Reset form after successful registration
+        setPageType("login"); // Switch to login page
       }
     } catch (error) {
       console.error("Registration error:", error);
-      setErrorMessage("Server error during registration. Please try again later.");
+      setErrorMessage("Server error during registration. Please try again later."); // Set error message for server error
     }
   };
 
+  // Handle user login
   const login = async (values, onSubmitProps) => {
     try {
       const loggedInResponse = await fetch("http://localhost:3001/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
+        body: JSON.stringify(values), // Send form values as JSON
       });
 
-      const loggedIn = await loggedInResponse.json();
+      const loggedIn = await loggedInResponse.json(); // Parse JSON response
       if (loggedIn.msg || loggedIn.error) {
-        setErrorMessage(loggedIn.msg || loggedIn.error);
+        setErrorMessage(loggedIn.msg || loggedIn.error); // Set error message if there's an error
       } else {
-        onSubmitProps.resetForm();
+        onSubmitProps.resetForm(); // Reset form after successful login
         dispatch(
           setLogin({
             user: loggedIn.user,
             token: loggedIn.token,
           })
-        );
-        navigate("/home");
+        ); // Dispatch login action to Redux store
+        navigate("/home"); // Navigate to home page
       }
     } catch (error) {
       console.error("Login error:", error);
-      setErrorMessage("Server error during login. Please try again later.");
+      setErrorMessage("Server error during login. Please try again later."); // Set error message for server error
     }
   };
 
+  // Handle form submission based on page type
   const handleFormSubmit = async (values, onSubmitProps) => {
     setErrorMessage(""); // Clear previous error messages
     if (isLogin) await login(values, onSubmitProps);
@@ -120,9 +127,9 @@ const Form = () => {
 
   return (
     <Formik
-      onSubmit={handleFormSubmit}
-      initialValues={isLogin ? initialValuesLogin : initialValuesRegister}
-      validationSchema={isLogin ? loginSchema : registerSchema}
+      onSubmit={handleFormSubmit} // Handle form submission
+      initialValues={isLogin ? initialValuesLogin : initialValuesRegister} // Set initial values based on page type
+      validationSchema={isLogin ? loginSchema : registerSchema} // Set validation schema based on page type
     >
       {({
         values,
@@ -143,6 +150,7 @@ const Form = () => {
               "& > div": { gridColumn: isNonMobile ? undefined : "span 4" },
             }}
           >
+            {/* Registration fields */}
             {isRegister && (
               <>
                 <TextField
@@ -196,8 +204,8 @@ const Form = () => {
                   p="1rem"
                 >
                   <Dropzone
-                    acceptedFiles=".jpg,.jpeg,.png"
-                    multiple={false}
+                    acceptedFiles=".jpg,.jpeg,.png" // Restrict accepted file types
+                    multiple={false} // Allow only one file
                     onDrop={(acceptedFiles) =>
                       setFieldValue("picture", acceptedFiles[0])
                     }
@@ -211,11 +219,11 @@ const Form = () => {
                       >
                         <input {...getInputProps()} />
                         {!values.picture ? (
-                          <p>Add Picture Here</p>
+                          <p>Add Picture Here</p> // Placeholder text when no picture is selected
                         ) : (
                           <FlexBetween>
-                            <Typography>{values.picture.name}</Typography>
-                            <EditOutlinedIcon />
+                            <Typography>{values.picture.name}</Typography> {/* Display picture name */}
+                            <EditOutlinedIcon /> {/* Edit icon */}
                           </FlexBetween>
                         )}
                       </Box>
@@ -224,6 +232,8 @@ const Form = () => {
                 </Box>
               </>
             )}
+
+            {/* Common fields for both login and registration */}
             <TextField
               label="Email"
               onBlur={handleBlur}
@@ -247,6 +257,7 @@ const Form = () => {
             />
           </Box>
 
+          {/* Display error message */}
           {errorMessage && (
             <Typography color="error" sx={{ mt: 2 }}>
               {errorMessage}
@@ -265,12 +276,12 @@ const Form = () => {
                 "&:hover": { color: palette.primary.main },
               }}
             >
-              {isLogin ? "LOGIN" : "REGISTER"}
+              {isLogin ? "LOGIN" : "REGISTER"} {/* Button text based on page type */}
             </Button>
             <Typography
               onClick={() => {
-                setPageType(isLogin ? "register" : "login");
-                resetForm();
+                setPageType(isLogin ? "register" : "login"); // Toggle page type
+                resetForm(); // Reset form fields
                 setErrorMessage(""); // Clear error message when switching forms
               }}
               sx={{
@@ -283,7 +294,7 @@ const Form = () => {
               }}
             >
               {isLogin
-                ? "Don't have an account? Sign Up here."
+                ? "Don't have an account? Sign Up here." // Text to switch to registration
                 : "Already have an account? Login here."}
             </Typography>
           </Box>
@@ -294,3 +305,4 @@ const Form = () => {
 };
 
 export default Form;
+
