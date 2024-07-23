@@ -4,16 +4,21 @@ import {
   LocationOnOutlined,
   WorkOutlineOutlined,
 } from "@mui/icons-material";
-import { Box, Typography, Divider, useTheme } from "@mui/material";
+import { Box, Typography, Divider, useTheme, IconButton } from "@mui/material";
 import UserImage from "../../components/UserImage";
 import FlexBetween from "../../components/FlexBetween";
 import WidgetWrapper from "../../components/WidgetWrapper";
 import { useSelector } from "react-redux";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import TwitterIcon from "@mui/icons-material/Twitter";
+import LinkedInIcon from "@mui/icons-material/LinkedIn";
 
 const UserWidget = ({ userId, picturePath }) => {
   const [user, setUser] = useState(null);
+  const [twitterHandle, setTwitterHandle] = useState('');
+  const [linkedinHandle, setLinkedinHandle] = useState('');
+  const [isEditing, setIsEditing] = useState(false);
   const { palette } = useTheme();
   const navigate = useNavigate();
   const token = useSelector((state) => state.token);
@@ -21,28 +26,34 @@ const UserWidget = ({ userId, picturePath }) => {
   const medium = palette.neutral.medium;
   const main = palette.neutral.main;
 
-  // Function to fetch user data
   const getUser = async () => {
-    try {
-      const response = await fetch(`http://localhost:3001/users/${userId}`, {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to fetch user data');
-      }
-
-      const data = await response.json();
-      setUser(data);
-    } catch (error) {
-      console.error('Error fetching user data:', error);
-    }
+    const response = await fetch(`http://localhost:3001/users/${userId}`, {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+    setUser(data);
+    setTwitterHandle(data.twitterHandle || '');
+    setLinkedinHandle(data.linkedinHandle || '');
   };
 
   useEffect(() => {
     getUser();
-  }); // Added dependencies for userId and token
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const handleUpdate = async () => {
+    await fetch(`http://localhost:3001/users/update/${userId}`, {
+      method: 'PATCH',
+      headers: {
+        'Content-Type': 'application/json',
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ twitterHandle, linkedinHandle }),
+    });
+
+    getUser();
+    setIsEditing(false);
+  };
 
   if (!user) {
     return null;
@@ -132,28 +143,62 @@ const UserWidget = ({ userId, picturePath }) => {
 
         <FlexBetween gap="1rem" mb="0.5rem">
           <FlexBetween gap="1rem">
-            <img src="../assets/twitter.png" alt="Twitter" />
+            <TwitterIcon sx={{ color: main }} />
             <Box>
               <Typography color={main} fontWeight="500">
                 Twitter
               </Typography>
-              <Typography color={medium}>Networks!</Typography>
+              {isEditing ? (
+                <>
+                  <input
+                    type="text"
+                    value={twitterHandle}
+                    onChange={(e) => setTwitterHandle(e.target.value)}
+                  />
+                  <IconButton onClick={handleUpdate}>
+                    <EditOutlined sx={{ color: main }} />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <Typography color={medium}>{twitterHandle || 'Add your Twitter handle'}</Typography>
+                  <IconButton onClick={() => setIsEditing(true)}>
+                    <EditOutlined sx={{ color: main }} />
+                  </IconButton>
+                </>
+              )}
             </Box>
           </FlexBetween>
-          <EditOutlined sx={{ color: main }} />
         </FlexBetween>
 
         <FlexBetween gap="1rem">
           <FlexBetween gap="1rem">
-            <img src="../assets/linkedin.png" alt="LinkedIn" />
+            <LinkedInIcon sx={{ color: main }} />
             <Box>
               <Typography color={main} fontWeight="500">
                 LinkedIn
               </Typography>
-              <Typography color={medium}>Network Platform</Typography>
+              {isEditing ? (
+                <>
+                  <input
+                    type="text"
+                    value={linkedinHandle}
+                    onChange={(e) => setLinkedinHandle(e.target.value)}
+                  />
+                  <IconButton onClick={handleUpdate}>
+                    <EditOutlined sx={{ color: main }} />
+                  </IconButton>
+                </>
+              ) : (
+                <>
+                  <Typography color={medium}>{linkedinHandle || 'Add your LinkedIn handle'}</Typography>
+                  <IconButton onClick={() => setIsEditing(true)}>
+                    <EditOutlined sx={{ color: main }} />
+                  </IconButton>
+                </>
+              )}
             </Box>
           </FlexBetween>
-          <EditOutlined sx={{ color: main }} />
         </FlexBetween>
       </Box>
     </WidgetWrapper>

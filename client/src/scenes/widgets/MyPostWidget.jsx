@@ -27,34 +27,29 @@ import { setPosts } from "../../state";
 
 const MyPostWidget = ({ picturePath }) => {
   const dispatch = useDispatch();
-  const [isImage, setIsImage] = useState(false); // State to toggle image upload
-  const [isClip, setIsClip] = useState(false); // State to toggle video clip upload
-  const [isAttachment, setIsAttachment] = useState(false); // State to toggle file attachment upload
-  const [isAudio, setIsAudio] = useState(false); // State to toggle audio upload
-  const [image, setImage] = useState(null); // State for the selected image
-  const [clip, setClip] = useState(null); // State for the selected video clip
-  const [attachment, setAttachment] = useState(null); // State for the selected file attachment
-  const [audio, setAudio] = useState(null); // State for the selected audio file
-  const [post, setPost] = useState(""); // State for the post text
+  const [isImage, setIsImage] = useState(false);
+  const [isClip, setIsClip] = useState(false);
+  const [isAttachment, setIsAttachment] = useState(false);
+  const [isAudio, setIsAudio] = useState(false);
+  const [image, setImage] = useState(null);
+  const [clip, setClip] = useState(null);
+  const [attachment, setAttachment] = useState(null);
+  const [audio, setAudio] = useState(null);
+  const [post, setPost] = useState("");
   const { palette } = useTheme();
-  const { _id } = useSelector((state) => state.user); // Get user ID from Redux state
-  const token = useSelector((state) => state.token); // Get auth token from Redux state
-  const isNonMobileScreens = useMediaQuery("(min-width: 1000px)"); // Check if screen size is non-mobile
+  const { _id } = useSelector((state) => state.user);
+  const token = useSelector((state) => state.token);
+  const isNonMobileScreens = useMediaQuery("(min-width: 1000px)");
   const mediumMain = palette.neutral.mediumMain;
   const medium = palette.neutral.medium;
 
   // Function to handle creating a post
   const handlePost = async () => {
-    if (!post && !image && !clip && !attachment && !audio) {
-      return; // Ensure post content or file is provided
-    }
-
     try {
       const formData = new FormData();
       formData.append("userId", _id);
       formData.append("description", post);
 
-      // Append file data to formData if present
       if (image) {
         formData.append("picture", image);
         formData.append("picturePath", image.name);
@@ -83,13 +78,16 @@ const MyPostWidget = ({ picturePath }) => {
       }
 
       const posts = await response.json();
-      dispatch(setPosts({ posts })); // Update Redux state with new posts
-      // Clear all states after posting
+      dispatch(setPosts({ posts }));
       setImage(null);
       setClip(null);
       setAttachment(null);
       setAudio(null);
       setPost("");
+      setIsImage(false);
+      setIsClip(false);
+      setIsAttachment(false);
+      setIsAudio(false);
     } catch (error) {
       console.error("Error creating post:", error);
     }
@@ -98,7 +96,7 @@ const MyPostWidget = ({ picturePath }) => {
   return (
     <WidgetWrapper>
       <FlexBetween gap="1.5rem">
-        <UserImage image={picturePath} /> {/* Display user's profile image */}
+        <UserImage image={picturePath} />
         <InputBase
           placeholder="What's on your mind..."
           onChange={(e) => setPost(e.target.value)}
@@ -112,7 +110,6 @@ const MyPostWidget = ({ picturePath }) => {
         />
       </FlexBetween>
       
-      {/* Conditional rendering for image upload */}
       {isImage && (
         <Box
           border={`1px solid ${medium}`}
@@ -158,7 +155,6 @@ const MyPostWidget = ({ picturePath }) => {
         </Box>
       )}
 
-      {/* Conditional rendering for video clip upload */}
       {isClip && (
         <Box
           border={`1px solid ${medium}`}
@@ -167,7 +163,7 @@ const MyPostWidget = ({ picturePath }) => {
           p="1rem"
         >
           <Dropzone
-            acceptedFiles=".mp4,.mov"
+            acceptedFiles=".gif"
             multiple={false}
             onDrop={(acceptedFiles) => setClip(acceptedFiles[0])}
           >
@@ -204,7 +200,6 @@ const MyPostWidget = ({ picturePath }) => {
         </Box>
       )}
 
-      {/* Conditional rendering for file attachment upload */}
       {isAttachment && (
         <Box
           border={`1px solid ${medium}`}
@@ -213,7 +208,7 @@ const MyPostWidget = ({ picturePath }) => {
           p="1rem"
         >
           <Dropzone
-            acceptedFiles=".pdf,.doc,.docx,.ppt,.pptx"
+            acceptedFiles=".pdf,.doc,.docx,.xls,.xlsx"
             multiple={false}
             onDrop={(acceptedFiles) => setAttachment(acceptedFiles[0])}
           >
@@ -250,7 +245,6 @@ const MyPostWidget = ({ picturePath }) => {
         </Box>
       )}
 
-      {/* Conditional rendering for audio upload */}
       {isAudio && (
         <Box
           border={`1px solid ${medium}`}
@@ -259,7 +253,7 @@ const MyPostWidget = ({ picturePath }) => {
           p="1rem"
         >
           <Dropzone
-            acceptedFiles=".mp3"
+            acceptedFiles=".mp3,.wav"
             multiple={false}
             onDrop={(acceptedFiles) => setAudio(acceptedFiles[0])}
           >
@@ -298,13 +292,12 @@ const MyPostWidget = ({ picturePath }) => {
 
       <Divider sx={{ margin: "1.25rem 0" }} />
 
-            {/* Buttons to toggle file upload sections */}
-            <FlexBetween>
+      <FlexBetween>
         <FlexBetween gap="0.25rem" onClick={() => setIsImage(!isImage)}>
           <ImageOutlined sx={{ color: mediumMain }} />
           <Typography
             color={mediumMain}
-            sx={{ "&:hover": { cursor: "pointer", color: medium } }}
+            sx={{ "&:hover": { cursor            : "pointer", color: medium } }}
           >
             Image
           </Typography>
@@ -344,10 +337,14 @@ const MyPostWidget = ({ picturePath }) => {
           <FlexBetween gap="0.25rem">
             <MoreHorizOutlined sx={{ color: mediumMain }} />
           </FlexBetween>
-        ) : null}
+        ) : (
+          <FlexBetween gap="0.25rem">
+            <MoreHorizOutlined sx={{ color: mediumMain }} />
+          </FlexBetween>
+        )}
 
         <Button
-          disabled={!post && !image && !clip && !attachment && !audio} // Disable button if no content or file is selected
+          disabled={!post}
           onClick={handlePost}
           sx={{
             color: palette.background.alt,
@@ -363,3 +360,4 @@ const MyPostWidget = ({ picturePath }) => {
 };
 
 export default MyPostWidget;
+

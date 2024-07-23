@@ -4,63 +4,40 @@ import PostWidget from "./PostWidget";
 
 const PostsWidget = ({ userId, isProfile = false }) => {
   const token = useSelector((state) => state.token);
-  const [posts, setPosts] = useState([]);
-  const [error, setError] = useState(null); // State to handle errors
+  const [posts, setPostsState] = useState([]);
 
-  // Fetch all posts
-  const getPosts = useCallback(async () => {
-    try {
-      const response = await fetch("http://localhost:3001/posts", {
-        method: "GET",
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch posts: ${response.statusText}`);
-      }
-
-      const data = await response.json();
-      setPosts(data);
-    } catch (err) {
-      setError(err.message); // Set error message
-    }
+  const getPostsCallback = useCallback(async () => {
+    const response = await fetch("http://localhost:3001/posts", {
+      method: "GET",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await response.json();
+    setPostsState(data);
   }, [token]);
 
-  // Fetch posts for a specific user
-  const getUserPosts = useCallback(async () => {
-    try {
-      const response = await fetch(
-        `http://localhost:3001/posts/${userId}/posts`,
-        {
-          method: "GET",
-          headers: { Authorization: `Bearer ${token}` },
-        }
-      );
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user posts: ${response.statusText}`);
+  const getUserPostsCallback = useCallback(async () => {
+    const response = await fetch(
+      `http://localhost:3001/posts/${userId}/posts`,
+      {
+        method: "GET",
+        headers: { Authorization: `Bearer ${token}` },
       }
-
-      const data = await response.json();
-      setPosts(data);
-    } catch (err) {
-      setError(err.message); // Set error message
-    }
+    );
+    const data = await response.json();
+    setPostsState(data);
   }, [token, userId]);
 
   useEffect(() => {
     if (isProfile) {
-      getUserPosts();
+      getUserPostsCallback();
     } else {
-      getPosts();
+      getPostsCallback();
     }
-  }, [isProfile, getUserPosts, getPosts]);
+  }, [isProfile, getUserPostsCallback, getPostsCallback]);
 
   return (
     <>
-      {error ? (
-        <p>Error: {error}</p> // Display error if there is one
-      ) : posts.length > 0 ? (
+      {posts && posts.length > 0 ? (
         posts.map(
           ({
             _id,
@@ -69,8 +46,8 @@ const PostsWidget = ({ userId, isProfile = false }) => {
             lastName,
             description,
             location,
-            picturePath, // Path to post image
-            userPicturePath, // Path to user image
+            picturePath,
+            userPicturePath,
             likes,
             comments,
           }) => (
@@ -81,8 +58,8 @@ const PostsWidget = ({ userId, isProfile = false }) => {
               name={`${firstName} ${lastName}`}
               description={description}
               location={location}
-              picturePath={picturePath ? `http://localhost:6001/assets/${picturePath}` : null} // Adjust image URL
-              userPicturePath={userPicturePath ? `http://localhost:6001/assets/${userPicturePath}` : null} // Adjust image URL
+              picturePath={picturePath}
+              userPicturePath={userPicturePath}
               likes={likes}
               comments={comments}
             />

@@ -19,21 +19,28 @@ const Friend = ({ friendId, name, subtitle, userPicturePath }) => {
   const main = palette.neutral.main;
   const medium = palette.neutral.medium;
 
-  const isFriend = friends.find((friend) => friend._id === friendId);
+  const isFriend = Array.isArray(friends) && friends.find((friend) => friend._id === friendId);
 
   const patchFriend = async () => {
-    const response = await fetch(
-      `http://localhost:3001/users/${_id}/${friendId}`,
-      {
-        method: "PATCH",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
+    try {
+      const response = await fetch(
+        `http://localhost:3001/users/${_id}/${friendId}`,
+        {
+          method: "PATCH",
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      if (!response.ok) {
+        throw new Error("Failed to update friend status");
       }
-    );
-    const data = await response.json();
-    dispatch(setFriends({ friends: data }));
+      const data = await response.json();
+      dispatch(setFriends({ friends: data }));
+    } catch (error) {
+      console.error("Error updating friend status:", error);
+    }
   };
 
   return (
